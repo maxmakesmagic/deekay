@@ -1,0 +1,21 @@
+{
+    "name": "deekay",
+    "description": "Finder of Lost Articles on magic.wizards.com",
+    "version": "0.0.0.1",
+    "manifest_version": 3,
+    "icons": {
+        "48": "/assets/icons/48.png",
+        "128": "/assets/icons/128.png"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://magic.wizards.com/*"],
+            "js": ["deekay.js"],
+            "run_at": "document_end"
+        }
+    ],
+    "web_accessible_resources": [{
+        "resources": ["hashes/*"],
+        "matches": ["https://magic.wizards.com/*"]
+    }]
+}

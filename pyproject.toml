@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "deekay"
+version = "0.1.0"
+description = "Scripts for the deekay Chrome extension"
+authors = ["Max Dymond <maxmakesmagic@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+black = "^23.12.1"
+murmurhash3 = "^2.3.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+best_prefixes = "deekay.best_prefixes:run"
