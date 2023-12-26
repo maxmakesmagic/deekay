@@ -60,8 +60,14 @@ async function main() {
                 console.log("New URL: " + new_url);
 
                 // Construct the bar to inject
+                var link = document.createElement('a');
+                link.appendChild(document.createTextNode("let's go!"));
+                link.setAttribute("href", new_url);
+
                 var bar = document.createElement('div');
-                bar.innerHTML = "<div style=\"width: 100%; height: 40px;background: #373737;color: #FFF;line-height: 40px; z-index: 100000; \">DeeKay has found a working article link: <a href=\""+new_url+"\">let's go!</a></div>";
+                bar.appendChild(document.createTextNode("DeeKay has found a working article link: "));
+                bar.appendChild(link);
+                bar.setAttribute("style", "width: 100%; height: 40px;background: #373737;color: #FFF;line-height: 40px; z-index: 100000; ");
 
                 // Inject the bar at the top of the page
                 document.body.prepend(bar);
