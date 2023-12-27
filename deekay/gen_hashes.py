@@ -58,7 +58,7 @@ def main() -> None:
         # Write the file
         output_file = Path("hashes") / f"{prefix}.json"
         with output_file.open("w", encoding="utf-8") as f:
-            json.dump(suffix_mapping, f, sort_keys=True)
+            json.dump(suffix_mapping, f, indent=4, sort_keys=True)
 
         # Log
         log.info(f"Wrote {len(suffix_mapping)} entries to {output_file}")
