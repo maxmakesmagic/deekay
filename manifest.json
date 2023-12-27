@@ -9,12 +9,27 @@
     },
     "content_scripts": [
         {
-            "matches": ["https://magic.wizards.com/*"],
-            "js": ["deekay.js"]
+            "matches": [
+                "https://magic.wizards.com/*"
+            ],
+            "js": [
+                "deekay.js"
+            ]
         }
     ],
-    "web_accessible_resources": [{
-        "resources": ["hashes/*"],
-        "matches": ["https://magic.wizards.com/*"]
-    }]
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "hashes/*"
+            ],
+            "matches": [
+                "https://magic.wizards.com/*"
+            ]
+        }
+    ],
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "{28385426-1bd3-495a-81d4-3e88315047be}"
+        }
+    }
 }
