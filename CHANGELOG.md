@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Internal
 
-- Add github publishing of extension
+- Add github publishing of extension and linting
 
 ## [0.0.0.2] - 2023-12-27
 
