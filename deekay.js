@@ -27,9 +27,15 @@ function get_urls() {
 
     if (match) {
         const path = match[1];
-        const gen_url = "https://magic.wizards.com/en/articles/archive/" + path;
-        urls.push(gen_url);
+        urls.push("https://magic.wizards.com/en/articles/archive/" + path);
+        urls.push("http://magic.wizards.com/en/articles/archive/" + path);
     }
+
+    // If the URL starts with https://, try it with http://
+    if (url.startsWith("https://")) {
+        urls.push("http://" + url.substring(8));
+    }
+
     console.log("URLs: " + urls);
     return urls;
 }
@@ -93,7 +99,7 @@ async function main() {
                     var bar = document.createElement('div');
                     bar.appendChild(document.createTextNode("DeeKay has found a working article link: "));
                     bar.appendChild(link);
-                    bar.setAttribute("style", "width: 100%; height: 40px;background: #373737;color: #FFF;line-height: 40px; z-index: 100000; ");
+                    bar.setAttribute("style", "width: 100%; height: 40px;background: #373737;color: #FFF;line-height: 40px; z-index: 100000; padding-left: 1em;");
 
                     // Inject the bar at the top of the page
                     document.body.prepend(bar);

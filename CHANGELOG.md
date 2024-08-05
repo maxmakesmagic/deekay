@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 - Remove errant "sha1_urls()" function.
+- Use data gathered from Ormos run 2.
 
 ### Internal
 
