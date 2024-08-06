@@ -53,6 +53,21 @@ function detect404() {
     }
 }
 
+function add_bar(url, url_description, url_text) {
+    // Construct the bar to inject
+    var link = document.createElement('a');
+    link.appendChild(document.createTextNode(url_text));
+    link.setAttribute("href", url);
+
+    var bar = document.createElement('div');
+    bar.appendChild(document.createTextNode(url_description));
+    bar.appendChild(link);
+    bar.setAttribute("style", "width: 100%; height: 40px;background: #373737;color: #FFF;line-height: 40px; z-index: 100000; padding-left: 1em;");
+
+    // Inject the bar at the top of the page
+    document.body.prepend(bar);
+}
+
 // Detect if the page had a 404 error and inject a link if possible
 async function main() {
     if (!detect404()) {
@@ -62,6 +77,7 @@ async function main() {
 
     // Get the set of URLs to try for this page.
     const urls = get_urls();
+    var bar_added = false;
 
     // Try each URL in turn
     for (const i in urls) {
@@ -80,7 +96,7 @@ async function main() {
         const resource_file = "/hashes/" + prefix + ".json";
 
         // Fetch the JSON resource file
-        var bar_added = await fetch(chrome.runtime.getURL(resource_file))
+        bar_added = await fetch(chrome.runtime.getURL(resource_file))
             .then(response => response.json())
             .then(data => {
                 // Check if the URL hash is in the JSON file
@@ -91,18 +107,8 @@ async function main() {
                     const new_url = wayback_prefix + data[suffix] + "/" + url;
                     console.log("New URL: " + new_url);
 
-                    // Construct the bar to inject
-                    var link = document.createElement('a');
-                    link.appendChild(document.createTextNode("let's go!"));
-                    link.setAttribute("href", new_url);
-
-                    var bar = document.createElement('div');
-                    bar.appendChild(document.createTextNode("DeeKay has found a working article link: "));
-                    bar.appendChild(link);
-                    bar.setAttribute("style", "width: 100%; height: 40px;background: #373737;color: #FFF;line-height: 40px; z-index: 100000; padding-left: 1em;");
-
-                    // Inject the bar at the top of the page
-                    document.body.prepend(bar);
+                    // Add a bar at the top of the page
+                    add_bar(new_url, "DeeKay has found a working article link: ", "let's go!");
                     return true;
                 }
                 else {
@@ -116,6 +122,23 @@ async function main() {
             console.log("Added a navigation bar; stopping")
             break;
         }
+    }
+
+    if (!bar_added)
+    {
+        if (typeof browser === "undefined") {
+            manifest = chrome.runtime.getManifest();
+            version = manifest.version;
+        }
+        else {
+            manifest = browser.runtime.getManifest();
+            version = manifest.version;
+        }
+
+        // No bar was added, add a link to the issue tracker
+        encoded_url = encodeURIComponent(location.href);
+        new_url = "https://github.com/maxmakesmagic/deekay/issues/new?template=missingurl.yml&title=[Missing]%3A+"+encoded_url+"&url="+encoded_url+"&version="+version;
+        add_bar(new_url, "DeeKay couldn't find a working article link. ", "Report this issue");
     }
 }
 
