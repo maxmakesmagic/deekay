@@ -1,7 +1,7 @@
 {
     "name": "deekay",
     "description": "Finder of Lost Articles on magic.wizards.com",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "manifest_version": 3,
     "icons": {
         "48": "/assets/icons/48.png",
