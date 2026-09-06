@@ -1,35 +1,64 @@
-name: Publish
+name: Publish to Chrome
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_call:
+    inputs:
+      version:
+        description: Release version to publish
+        required: true
+        type: string
+    secrets:
+      EXTENSION_ID:
+        required: true
+      PUBLISHER_ID:
+        required: true
+      CLIENT_ID:
+        required: true
+      CLIENT_SECRET:
+        required: true
+      REFRESH_TOKEN:
+        required: true
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing GitHub release version to republish
+        required: true
+        type: string
 
-  pull_request:
-    branches:
-      - main
+permissions:
+  contents: read
+
+concurrency:
+  group: chrome-publish
+  cancel-in-progress: false
 
 jobs:
-  build:
-    name: Make and publish webextension
+  publish:
+    name: Publish existing release to Chrome
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
-      - name: Build
-        run: ./make_extension.sh
+      - name: Download release artifact
+        run: >-
+          gh release download "$RELEASE_VERSION"
+          --repo "$REPOSITORY"
+          --pattern "deekay-$RELEASE_VERSION.zip"
+          --output deekay.zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RELEASE_VERSION: ${{ inputs.version }}
 
-      # Upload and release only on tags
       - name: Upload & release to Chrome
-        uses: mnao305/chrome-extension-upload@v6.0.0
+        uses: mnao305/chrome-extension-upload@f549d5d654694a7722d6abfa64c97409ad5e64c1 # v7.0.0
         with:
           file-path: deekay.zip
-          extension-id: ${{ secrets.EXTENSION_ID}}
+          extension-id: ${{ secrets.EXTENSION_ID }}
+          publisher-id: ${{ secrets.PUBLISHER_ID }}
           client-id: ${{ secrets.CLIENT_ID }}
           client-secret: ${{ secrets.CLIENT_SECRET }}
           refresh-token: ${{ secrets.REFRESH_TOKEN }}
-        if: startsWith(github.ref, 'refs/tags/')
 
-      # Always upload the artifact zip
       - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
