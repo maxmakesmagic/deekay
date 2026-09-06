@@ -1,0 +1,25 @@
+{
+  "name": "deekay",
+  "version": "0.0.0-development",
+  "private": true,
+  "description": "Release tooling for the DeeKay browser extension",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maxmakesmagic/deekay.git"
+  },
+  "engines": {
+    "node": ">=24.10.0"
+  },
+  "scripts": {
+    "build": "node scripts/prepare-release.mjs",
+    "lint": "node scripts/lint-extension.mjs",
+    "release": "semantic-release",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "@semantic-release/exec": "^7.1.0",
+    "conventional-changelog-conventionalcommits": "^10.4.0",
+    "semantic-release": "^25.0.9"
+  }
+}
