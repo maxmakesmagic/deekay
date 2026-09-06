@@ -45,7 +45,7 @@ jobs:
           RELEASE_VERSION: ${{ steps.semantic-release.outputs.version }}
       - name: "Stage dry-run release artifact"
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: deekay-release-dry-run
           path: deekay.zip

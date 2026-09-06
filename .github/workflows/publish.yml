@@ -116,7 +116,7 @@ jobs:
           REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
 
       - name: Upload validated artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ inputs.dry_run == true && 'deekay-publish-dry-run' || 'deekay' }}
           path: deekay.zip
