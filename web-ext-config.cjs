@@ -10,7 +10,7 @@ module.exports = {
       'poetry.lock',
       'pyproject.toml',
       'url_mapping_magic_wizards_com.json',
-      'web-ext-config.js',
+      'web-ext-config.cjs',
       '**/*.log',
       '**/*.md',
       '**/*.py',
