@@ -14,13 +14,13 @@ jobs:
     name: Make and publish webextension
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build
         run: ./make_extension.sh
 
       # Upload and release only on tags
       - name: Upload & release to Chrome
-        uses: mnao305/chrome-extension-upload@v5.0.0
+        uses: mnao305/chrome-extension-upload@v6.0.0
         with:
           file-path: deekay.zip
           extension-id: ${{ secrets.EXTENSION_ID}}
@@ -31,7 +31,7 @@ jobs:
 
       # Always upload the artifact zip
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: deekay
           path: deekay.zip
