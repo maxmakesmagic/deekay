@@ -44,8 +44,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  publish:
-    name: Publish extension
+  publish-chrome:
+    name: Publish extension to Chrome
     needs: release
     if: needs.release.outputs.released == 'true'
     uses: ./.github/workflows/publish.yml
@@ -57,3 +57,14 @@ jobs:
       CLIENT_ID: ${{ secrets.CLIENT_ID }}
       CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
       REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+
+  publish-firefox:
+    name: Publish extension to Firefox
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    uses: ./.github/workflows/publish-firefox.yml
+    with:
+      version: ${{ needs.release.outputs.version }}
+    secrets:
+      MOZILLA_ISSUER: ${{ secrets.MOZILLA_ISSUER }}
+      MOZILLA_SECRET: ${{ secrets.MOZILLA_SECRET }}

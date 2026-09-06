@@ -54,6 +54,10 @@ test("keeps the repository manifest on the semantic-release placeholder", async 
   );
 
   assert.equal(manifest.version, SEMANTIC_RELEASE_PLACEHOLDER);
+  assert.deepEqual(
+    manifest.browser_specific_settings.gecko.data_collection_permissions,
+    { required: ["browsingActivity"] },
+  );
 });
 
 test("updates only the manifest version", () => {

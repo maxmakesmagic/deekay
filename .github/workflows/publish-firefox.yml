@@ -1,0 +1,147 @@
+name: Publish to Firefox Add-ons
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: Release version to publish
+        required: true
+        type: string
+      dry_run:
+        description: Validate an Actions artifact without contacting Mozilla
+        required: false
+        default: false
+        type: boolean
+      artifact_name:
+        description: Actions artifact to validate during a dry run
+        required: false
+        default: ""
+        type: string
+    secrets:
+      MOZILLA_ISSUER:
+        required: false
+      MOZILLA_SECRET:
+        required: false
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing GitHub release version to republish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ inputs.dry_run == true && format('firefox-publish-dry-run-{0}', github.run_id) || 'firefox-publish' }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish existing release to Firefox Add-ons
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Download release artifact
+        if: inputs.dry_run != true
+        run: >-
+          gh release download "$RELEASE_VERSION"
+          --repo "$REPOSITORY"
+          --pattern "deekay-$RELEASE_VERSION.zip"
+          --output deekay.zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RELEASE_VERSION: ${{ inputs.version }}
+
+      - name: Check dry-run inputs
+        if: inputs.dry_run == true
+        shell: bash
+        run: |
+          if [[ -z "$ARTIFACT_NAME" ]]; then
+            echo "artifact_name is required for a publishing dry run" >&2
+            exit 1
+          fi
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+
+      - name: Download dry-run artifact
+        if: inputs.dry_run == true
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ inputs.artifact_name }}
+
+      - name: Verify extension package
+        shell: bash
+        run: |
+          set -euo pipefail
+          unzip -tq deekay.zip
+          archive_version="$(
+            unzip -p deekay.zip manifest.json |
+              node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version"
+          )"
+          if [[ "$archive_version" != "$RELEASE_VERSION" ]]; then
+            echo "Expected manifest version $RELEASE_VERSION, found $archive_version" >&2
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/deekay-firefox"
+          unzip -q deekay.zip -d "$RUNNER_TEMP/deekay-firefox"
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+
+      - name: Validate Firefox extension
+        run: >-
+          npx --yes web-ext@10.6.0 lint
+          --source-dir "$RUNNER_TEMP/deekay-firefox"
+          --warnings-as-errors
+          --no-config-discovery
+
+      - name: Build Firefox package
+        if: inputs.dry_run == true
+        run: >-
+          npx --yes web-ext@10.6.0 build
+          --source-dir "$RUNNER_TEMP/deekay-firefox"
+          --artifacts-dir "$RUNNER_TEMP/web-ext-artifacts"
+          --overwrite-dest
+          --no-config-discovery
+
+      - name: Check Mozilla credentials
+        if: inputs.dry_run != true
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          [[ -n "$MOZILLA_ISSUER" ]] || missing+=(MOZILLA_ISSUER)
+          [[ -n "$MOZILLA_SECRET" ]] || missing+=(MOZILLA_SECRET)
+          if (( ${#missing[@]} )); then
+            printf 'Missing required Mozilla credentials: %s\n' "${missing[*]}" >&2
+            exit 1
+          fi
+        env:
+          MOZILLA_ISSUER: ${{ secrets.MOZILLA_ISSUER }}
+          MOZILLA_SECRET: ${{ secrets.MOZILLA_SECRET }}
+
+      - name: Submit listed update to Firefox Add-ons
+        if: inputs.dry_run != true
+        run: >-
+          npx --yes web-ext@10.6.0 sign
+          --source-dir "$RUNNER_TEMP/deekay-firefox"
+          --artifacts-dir "$RUNNER_TEMP/web-ext-artifacts"
+          --channel listed
+          --approval-timeout 0
+          --no-input
+          --no-config-discovery
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.MOZILLA_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.MOZILLA_SECRET }}

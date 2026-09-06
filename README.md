@@ -19,12 +19,17 @@ placeholder. Builds and linting use an isolated source tree with a valid
 development version, while releases use their generated version. The committed
 manifest is never rewritten.
 
-Successful releases are published to the Chrome Web Store automatically. The
-`Publish to Chrome` workflow can also retry an existing GitHub release manually.
-Publishing requires the `EXTENSION_ID`, `PUBLISHER_ID`, `CLIENT_ID`,
-`CLIENT_SECRET`, and `REFRESH_TOKEN` repository secrets.
+Successful releases are submitted to the Chrome Web Store and Firefox Add-ons
+automatically. The store publishing workflows can also retry an existing GitHub
+release manually. Chrome publishing requires the `EXTENSION_ID`, `PUBLISHER_ID`,
+`CLIENT_ID`, `CLIENT_SECRET`, and `REFRESH_TOKEN` repository secrets. Firefox
+publishing requires `MOZILLA_ISSUER` and `MOZILLA_SECRET`, available from the
+[Firefox Add-ons API credentials page](https://addons.mozilla.org/en-US/developers/addon/api/key/).
+Mozilla may hold a submitted update for automated or manual review before it is
+published.
 
 Pull requests run the release pipeline in dry-run mode against an isolated Git
-remote. CI also builds the extension and passes its ZIP through the reusable
-Chrome publishing workflow for validation. The Chrome API call itself is skipped
-on pull requests, so store credentials are never exposed to PR code.
+remote. CI also builds the extension and passes its ZIP through both reusable
+store publishing workflows for validation. The store API calls themselves are
+skipped on pull requests, so publishing credentials are never exposed to PR
+code.
