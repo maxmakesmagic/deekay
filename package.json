@@ -15,11 +15,14 @@
     "build": "node scripts/prepare-release.mjs",
     "lint": "node scripts/lint-extension.mjs",
     "release": "semantic-release",
+    "release:dry-run": "node scripts/dry-run-release.mjs",
     "test": "node --test"
   },
   "devDependencies": {
+    "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/exec": "^7.1.0",
-    "conventional-changelog-conventionalcommits": "^10.4.0",
+    "@semantic-release/release-notes-generator": "^14.1.1",
+    "conventional-changelog-conventionalcommits": "9.3.1",
     "semantic-release": "^25.0.9"
   }
 }
