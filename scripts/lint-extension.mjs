@@ -8,7 +8,14 @@ import {
 await withVersionedExtension(DEVELOPMENT_VERSION, (sourceDir, root) => {
   execFileSync(
     "npx",
-    ["--yes", "web-ext@10.6.0", "lint", "--source-dir", sourceDir],
+    [
+      "--yes",
+      "web-ext@10.6.0",
+      "lint",
+      "--source-dir",
+      sourceDir,
+      "--warnings-as-errors",
+    ],
     {
       cwd: root,
       stdio: "inherit",

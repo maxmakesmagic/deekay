@@ -52,11 +52,21 @@ jobs:
           if-no-files-found: error
           overwrite: true
 
-  publish-dry-run:
+  publish-chrome-dry-run:
     name: "Dry-run Chrome publishing"
     if: github.event_name == 'pull_request'
     needs: lint
     uses: ./.github/workflows/publish.yml
+    with:
+      version: ${{ needs.lint.outputs.version }}
+      dry_run: true
+      artifact_name: deekay-release-dry-run
+
+  publish-firefox-dry-run:
+    name: "Dry-run Firefox publishing"
+    if: github.event_name == 'pull_request'
+    needs: lint
+    uses: ./.github/workflows/publish-firefox.yml
     with:
       version: ${{ needs.lint.outputs.version }}
       dry_run: true
