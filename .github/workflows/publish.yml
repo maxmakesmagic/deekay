@@ -7,17 +7,27 @@ on:
         description: Release version to publish
         required: true
         type: string
+      dry_run:
+        description: Validate an Actions artifact without contacting Chrome
+        required: false
+        default: false
+        type: boolean
+      artifact_name:
+        description: Actions artifact to validate during a dry run
+        required: false
+        default: ""
+        type: string
     secrets:
       EXTENSION_ID:
-        required: true
+        required: false
       PUBLISHER_ID:
-        required: true
+        required: false
       CLIENT_ID:
-        required: true
+        required: false
       CLIENT_SECRET:
-        required: true
+        required: false
       REFRESH_TOKEN:
-        required: true
+        required: false
   workflow_dispatch:
     inputs:
       version:
@@ -29,7 +39,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: chrome-publish
+  group: ${{ inputs.dry_run == true && format('chrome-publish-dry-run-{0}', github.run_id) || 'chrome-publish' }}
   cancel-in-progress: false
 
 jobs:
@@ -39,6 +49,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Download release artifact
+        if: inputs.dry_run != true
         run: >-
           gh release download "$RELEASE_VERSION"
           --repo "$REPOSITORY"
@@ -49,7 +60,71 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           RELEASE_VERSION: ${{ inputs.version }}
 
+      - name: Check dry-run inputs
+        if: inputs.dry_run == true
+        shell: bash
+        run: |
+          if [[ -z "$ARTIFACT_NAME" ]]; then
+            echo "artifact_name is required for a publishing dry run" >&2
+            exit 1
+          fi
+        env:
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+
+      - name: Download dry-run artifact
+        if: inputs.dry_run == true
+        uses: actions/download-artifact@v6
+        with:
+          name: ${{ inputs.artifact_name }}
+
+      - name: Verify extension package
+        shell: bash
+        run: |
+          set -euo pipefail
+          unzip -tq deekay.zip
+          archive_version="$(
+            unzip -p deekay.zip manifest.json |
+              node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version"
+          )"
+          if [[ "$archive_version" != "$RELEASE_VERSION" ]]; then
+            echo "Expected manifest version $RELEASE_VERSION, found $archive_version" >&2
+            exit 1
+          fi
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+
+      - name: Check Chrome credentials
+        if: inputs.dry_run != true
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          [[ -n "$EXTENSION_ID" ]] || missing+=(EXTENSION_ID)
+          [[ -n "$PUBLISHER_ID" ]] || missing+=(PUBLISHER_ID)
+          [[ -n "$CLIENT_ID" ]] || missing+=(CLIENT_ID)
+          [[ -n "$CLIENT_SECRET" ]] || missing+=(CLIENT_SECRET)
+          [[ -n "$REFRESH_TOKEN" ]] || missing+=(REFRESH_TOKEN)
+          if (( ${#missing[@]} )); then
+            printf 'Missing required Chrome credentials: %s\n' "${missing[*]}" >&2
+            exit 1
+          fi
+        env:
+          EXTENSION_ID: ${{ secrets.EXTENSION_ID }}
+          PUBLISHER_ID: ${{ secrets.PUBLISHER_ID }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+
+      - name: Upload validated artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.dry_run == true && 'deekay-publish-dry-run' || 'deekay' }}
+          path: deekay.zip
+          if-no-files-found: error
+          overwrite: true
+
       - name: Upload & release to Chrome
+        if: inputs.dry_run != true
         uses: mnao305/chrome-extension-upload@f549d5d654694a7722d6abfa64c97409ad5e64c1 # v7.0.0
         with:
           file-path: deekay.zip
@@ -58,9 +133,3 @@ jobs:
           client-id: ${{ secrets.CLIENT_ID }}
           client-secret: ${{ secrets.CLIENT_SECRET }}
           refresh-token: ${{ secrets.REFRESH_TOKEN }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: deekay
-          path: deekay.zip

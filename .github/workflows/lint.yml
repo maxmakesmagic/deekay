@@ -7,14 +7,22 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     name: "Lint"
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      version: ${{ steps.semantic-release.outputs.version }}
     steps:
       - name: "Checkout"
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - name: "Set up Node.js"
         uses: actions/setup-node@v6
         with:
@@ -22,5 +30,34 @@ jobs:
           cache: npm
       - name: "Install dependencies"
         run: npm ci
+      - name: "Test release tooling"
+        run: npm test
       - name: "web-ext lint"
         run: npm run lint
+      - name: "Dry-run semantic release"
+        if: github.event_name == 'pull_request'
+        id: semantic-release
+        run: npm run release:dry-run
+      - name: "Build proposed release"
+        if: github.event_name == 'pull_request'
+        run: node scripts/prepare-release.mjs "$RELEASE_VERSION"
+        env:
+          RELEASE_VERSION: ${{ steps.semantic-release.outputs.version }}
+      - name: "Stage dry-run release artifact"
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v6
+        with:
+          name: deekay-release-dry-run
+          path: deekay.zip
+          if-no-files-found: error
+          overwrite: true
+
+  publish-dry-run:
+    name: "Dry-run Chrome publishing"
+    if: github.event_name == 'pull_request'
+    needs: lint
+    uses: ./.github/workflows/publish.yml
+    with:
+      version: ${{ needs.lint.outputs.version }}
+      dry_run: true
+      artifact_name: deekay-release-dry-run

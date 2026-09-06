@@ -23,3 +23,8 @@ Successful releases are published to the Chrome Web Store automatically. The
 `Publish to Chrome` workflow can also retry an existing GitHub release manually.
 Publishing requires the `EXTENSION_ID`, `PUBLISHER_ID`, `CLIENT_ID`,
 `CLIENT_SECRET`, and `REFRESH_TOKEN` repository secrets.
+
+Pull requests run the release pipeline in dry-run mode against an isolated Git
+remote. CI also builds the extension and passes its ZIP through the reusable
+Chrome publishing workflow for validation. The Chrome API call itself is skipped
+on pull requests, so store credentials are never exposed to PR code.
