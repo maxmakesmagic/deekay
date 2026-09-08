@@ -73,7 +73,7 @@ jobs:
 
       - name: Download dry-run artifact
         if: inputs.dry_run == true
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: ${{ inputs.artifact_name }}
 
